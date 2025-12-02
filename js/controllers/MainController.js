@@ -1,171 +1,159 @@
 // js/controllers/MainController.js
 (function() {
     'use strict';
-    
+
     angular
         .module('tiendaApp')
         .controller('MainController', MainController);
 
-    // Inyección de dependencias para el servicio creado
-    MainController.$inject = ['$scope', 'ProductService']; 
+    MainController.$inject = ['$scope', 'ProductService'];
 
     function MainController($scope, ProductService) {
 
-        // Lista de todos los productos
-        $scope.allProducts = []; 
-        // Lista de productos que se mostrarán en pantalla (filtrados)
-        $scope.displayProducts = []; 
-        // Array del carrito de compras
-        $scope.cart = [];
-        // Monto total del carrito 
-        $scope.cartTotal = 0; 
+        // ================================
+        // VARIABLES PRINCIPALES
+        // ================================
+        $scope.allProducts = [];       // Todos los productos desde la API
+        $scope.displayProducts = [];   // Productos filtrados que se muestran
+        $scope.cart = [];              // Carrito
+        $scope.cartTotal = 0;          // Total del carrito
 
-        // Lista de categorías únicas
-        $scope.categories = []; 
+        // Categorías (Persona 3)
+        $scope.categories = [];
+        $scope.selectedCategory = "";  // valor actual del dropdown
+        $scope.searchText = "";        // texto de búsqueda
 
-        // Función auxiliar para extraer las categorías (Ayuda a Persona 3)
+        // Modales (Persona 4)
+        $scope.showDetailsModal = false;
+        $scope.showCartModal = false;
+        $scope.selectedProduct = null;
+
+        // ================================
+        // FUNCIONES AUXILIARES
+        // ================================
+
+        // Obtener categorías únicas desde los productos
         function getUniqueCategories(products) {
-            // Usamos un objeto Set para obtener elementos únicos de forma eficiente
-            var categoriesSet = new Set();
-            // Agregamos una opción "Todos" (o similar) para ver todos los productos
-            categoriesSet.add('all'); 
-            
-            products.forEach(function(product) {
-                if (product.category) {
-                    // Agregar la categoría al Set
-                    categoriesSet.add(product.category); 
+            var set = new Set();
+            products.forEach(function(p) {
+                if (p.category) {
+                    set.add(p.category);
                 }
             });
-            
-            // Convertir el Set de vuelta a un array para usarlo en el DropDown de AngularJS
-            return Array.from(categoriesSet);
+            return Array.from(set);
         }
+
+        // Calcular total del carrito (Persona 5)
+        function calculateTotal(cart) {
+            var total = 0;
+            cart.forEach(function(item) {
+                total += item.price * item.quantity;
+            });
+            return total;
+        }
+
+        // ================================
+        // CARGA INICIAL DE DATOS
+        // ================================
 
         // 1. Obtener productos de la API
         ProductService.getAllProducts().then(function(products) {
             $scope.allProducts = products;
             $scope.displayProducts = products;
 
-            // **PASO CLAVE: EXTRAER CATEGORÍAS ÚNICAS**
-            // Este array de categorías será usado por Persona 3 para el DropDown (Requisito 5a)
+            // Extraer categorías (Persona 3)
             $scope.categories = getUniqueCategories(products);
-            
-            // **VERIFICACIÓN:**
-            console.log("Productos cargados exitosamente:", products.length);
-            console.log("Categorías únicas:", $scope.categories);
 
+            console.log("Productos cargados:", products.length);
+            console.log("Categorías:", $scope.categories);
         });
 
-        // 2. Cargar carrito del localStorage (Requisito 57)
-        $scope.cart = ProductService.getCart();
-        // **PENDIENTE**: Aquí Persona 5 debe implementar la función de cálculo
-        // $scope.cartTotal = calculateTotal($scope.cart); 
+        // 2. Cargar carrito desde localStorage
+        $scope.cart = ProductService.getCart() || [];
+        $scope.cartTotal = calculateTotal($scope.cart);
 
-        // Función simulada para abrir el modal del carrito (Tarea de Persona 4)
+        // ================================
+        // LÓGICA DE FILTROS 
+        // ================================
+
+        // Se llama cuando cambia el dropdown
+        $scope.filterByCategory = function() {
+            $scope.applyFilters();
+        };
+
+        // Aplica combinación de filtros:
+        // categoría + búsqueda por nombre
+        $scope.applyFilters = function() {
+            var list = $scope.allProducts;
+
+            // Filtro por categoría
+            if ($scope.selectedCategory && $scope.selectedCategory !== "") {
+                list = list.filter(function(p) {
+                    return p.category === $scope.selectedCategory;
+                });
+            }
+
+            // Filtro por texto (título)
+            if ($scope.searchText && $scope.searchText.trim() !== "") {
+                var text = $scope.searchText.toLowerCase();
+                list = list.filter(function(p) {
+                    return p.title.toLowerCase().indexOf(text) !== -1;
+                });
+            }
+
+            $scope.displayProducts = list;
+        };
+
+        // ================================
+        // DETALLES DEL PRODUCTO
+        // ================================
+
+        $scope.openDetails = function(product) {
+            $scope.selectedProduct = product;
+            $scope.showDetailsModal = true;
+        };
+
+        // ================================
+        // CARRITO (PERSONAS 4 y 5)
+        // ================================
+
+        // Abrir modal del carrito (tu HTML llama a openCartModal)
         $scope.openCartModal = function() {
-            // Lógica para abrir el modal de Carrito de Compra [cite: 56]
-            console.log("Abrir modal del carrito. Total actual:", $scope.cartTotal);
+            $scope.cartTotal = calculateTotal($scope.cart);
+            $scope.showCartModal = true;
         };
-        
-        // Función placeholder que será implementada por Persona 4
+
+        // Agregar producto al carrito
         $scope.updateCart = function(product) {
-            // Lógica para agregar/actualizar producto en $scope.cart
-            // Luego, guardar en localStorage
-            ProductService.saveCart($scope.cart);
-            // Luego, Persona 5 actualizará el total
-            // $scope.cartTotal = calculateTotal($scope.cart); 
-        };
 
-        /*
-        // Función de prueba para verificar que el localStorage funciona
-        $scope.testLocalStorage = function() {
-            console.log("--- TEST LOCAL STORAGE ---");
-            
-            // 1. Crear un producto de prueba
-            var testProduct = { id: Date.now(), name: 'Test Item ' + Date.now(), price: 1.00 };
-
-            // 2. Agregar al carrito y guardar
-            $scope.cart.push(testProduct);
-            ProductService.saveCart($scope.cart);
-            
-            console.log("Carrito guardado:", ProductService.getCart());
-            
-            // 3. Limpiar el carrito (prueba)
-            // ProductService.clearCart();
-            // console.log("Carrito después de limpiar:", ProductService.getCart());
-
-            console.log("--- FIN TEST ---");
-        };
-        
-        // Ejecuta la función de prueba para verificar
-        $scope.testLocalStorage();
-        */
-    }
-    var app = angular.module("StoreApp", []);
-
-app.controller("MainController", function($scope, ProductService) {
-
-    // Productos de ejemplo
-    $scope.products = [
-        { id:1, name:"Laptop", price:900, img:"img1.jpg", description:"Laptop potente" },
-        { id:2, name:"Mouse", price:25, img:"img2.jpg", description:"Mouse gamer" }
-    ];
-
-    $scope.cart = ProductService.getCart();
-    $scope.cartTotal = ProductService.getTotal($scope.cart);
-
-    $scope.showDetailsModal = false;
-    $scope.showCartModal = false;
-    $scope.selectedProduct = null;
-
-    // =============================
-    // ABRIR MODAL DE DETALLES
-    // =============================
-    $scope.openDetails = function(product) {
-        $scope.selectedProduct = product;
-        $scope.showDetailsModal = true;
-    };
-
-    // =============================
-    // AGREGAR AL CARRITO
-    // =============================
-    $scope.updateCart = function(product) {
-
-        let item = $scope.cart.find(p => p.id === product.id);
-
-        if(item) {
-            item.quantity++;
-        } else {
-            $scope.cart.push({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                quantity: 1
+            // Buscamos si el producto ya está en el carrito
+            var item = $scope.cart.find(function(p) {
+                return p.id === product.id;
             });
-        }
 
-        ProductService.saveCart($scope.cart);
+            if (item) {
+                item.quantity++;
+            } else {
+                $scope.cart.push({
+                    id: product.id,
+                    title: product.title,      // IMPORTANTE: tu HTML muestra item.title
+                    price: product.price,
+                    quantity: 1
+                });
+            }
 
-        $scope.cartTotal = ProductService.getTotal($scope.cart);
+            // Guardar en localStorage
+            ProductService.saveCart($scope.cart);
 
-        alert("Producto agregado al carrito");
-    };
+            // Recalcular total
+            $scope.cartTotal = calculateTotal($scope.cart);
+        };
 
-    // =============================
-    // ABRIR MODAL DEL CARRITO
-    // =============================
-    $scope.openCart = function() {
-        $scope.cartTotal = ProductService.getTotal($scope.cart);
-        $scope.showCartModal = true;
-    };
+        // Cerrar modales (detalles y carrito)
+        $scope.closeModals = function() {
+            $scope.showDetailsModal = false;
+            $scope.showCartModal = false;
+        };
+    }
 
-    // =============================
-    // BOTÓN CANCELAR (CERRAR MODALES)
-    // =============================
-    $scope.closeModals = function() {
-        $scope.showDetailsModal = false;
-        $scope.showCartModal = false;
-    };
-
-});
 })();

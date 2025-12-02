@@ -113,12 +113,24 @@
         <div class="products-filters">
           <div class="filter-group">
             <label>Categoría:</label>
-            <span class="category-pill">{{ selectedCategoryName || 'Todas' }}</span>
+            <select class="form-control"
+                    ng-model="selectedCategory"
+                    ng-change="filterByCategory()">
+                <option value="">Todas</option>
+                <option ng-repeat="cat in categories" value="{{cat}}">
+                  {{cat | uppercase}}
+                </option>
+            </select>
           </div>
+
 
           <div class="filter-group">
             <label>Buscar:</label>
-            <input type="text" class="search-input" placeholder="Buscar por nombre..." ng-model="searchText">
+              <input type="text" 
+                    class="search-input" 
+                    placeholder="Buscar por nombre..." 
+                    ng-model="searchText"
+                    ng-change="applyFilters()">
           </div>
         </div>
       </div>
@@ -126,7 +138,7 @@
       <!-- LISTA DE PRODUCTOS -->
       <div class="products-section">
         <div class="product-card" 
-             ng-repeat="p in displayProducts | filter: searchText">
+             ng-repeat="p in displayProducts">
           
           <img class="product-image" ng-src="{{p.image}}" alt="{{p.title}}">
           <h3 class="product-title">{{p.title}}</h3>
