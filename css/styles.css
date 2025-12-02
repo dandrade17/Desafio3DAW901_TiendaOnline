@@ -20,29 +20,88 @@ body {
   border: none;
   margin-bottom: 0;
   background: #1f2933; /* azul gris oscuro */
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.45);
 }
 
 .navbar-brand {
   color: #ffffff !important;
   font-weight: 600;
-  font-size: 1.7rem;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
 }
 
+.navbar-brand .brand-main {
+  font-size: 1.9rem;
+}
+
+.navbar-brand .brand-sub {
+  font-size: 0.9rem;
+  color: #d1d5db;
+  font-weight: 400;
+}
+
+/* Links de la navbar */
 .navbar-nav > li > a {
   color: #e5e7eb !important;
   font-weight: 500;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .navbar-nav > li > a:hover {
-  background: transparent;
+  background: rgba(15, 23, 42, 0.3) !important;
   color: #ffffff !important;
 }
 
-/* Cart total en navbar */
-.navbar .glyphicon-shopping-cart {
-  margin-right: 6px;
+/* Cart en navbar */
+.navbar-cart a {
+  position: relative;
+  padding-right: 18px;
 }
+
+.navbar .glyphicon-shopping-cart {
+  margin-right: 4px;
+  font-size: 1.2rem;
+}
+
+.cart-label {
+  display: inline-block;
+}
+
+.cart-amount {
+  font-weight: 600;
+}
+
+/* Badge redondo con cantidad */
+.cart-badge {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  background: #ef4444;
+  color: white;
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Botón toggle (hamburguesa) más visible en móvil */
+.navbar-toggle {
+  border-color: transparent;
+}
+
+.navbar-toggle .icon-bar {
+  background-color: #e5e7eb;
+}
+
+.navbar-toggle:focus,
+.navbar-toggle:hover {
+  background: rgba(15, 23, 42, 0.4);
+}
+
 
 /* Contenido principal */
 .container {
@@ -338,6 +397,27 @@ body {
     font-size: 1.2rem;
   }
 }
+
+/* ====== AJUSTES RESPONSIVE EXTRA ====== */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .navbar-brand .brand-main {
+    font-size: 1.6rem;
+  }
+
+  .navbar-brand .brand-sub {
+    font-size: 0.85rem;
+  }
+
+  #slider-area .carousel-caption {
+    font-size: 1rem;
+}
+}
+
 
 /* ====== FOOTER ====== */
 

@@ -1,12 +1,14 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es" ng-app="tiendaApp">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FakeStore - Tienda Online</title>
 
+  <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
 
+  <!-- Estilos -->
   <link rel="stylesheet" href="css/styles.css">
 
 </head>
@@ -16,118 +18,127 @@
   <!-- NAVBAR -->
   <nav class="navbar navbar-default">
     <div class="container-fluid">
+
+      <!-- LOGO + TOGGLE (MÓVIL) -->
       <div class="navbar-header">
-        <a class="navbar-brand" href="#">FakeStore</a>
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#mainNavbar" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+
+        <a class="navbar-brand" href="#">
+          <span class="brand-main">FakeStore</span>
+          <span class="brand-sub">Tienda Online</span>
+        </a>
       </div>
-      <div class="collapse navbar-collapse">
+
+      <!-- MENÚ COLAPSABLE -->
+      <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="nav navbar-nav navbar-right">
-          <li>
-            <a href="#" ng-click="openCartModal()">
+          <li class="navbar-cart">
+            <a href="" ng-click="openCartModal()">
               <span class="glyphicon glyphicon-shopping-cart"></span>
-              ${{ cartTotal | number: 2 }}
+              <span class="cart-label">Carrito</span>
+              <span class="cart-amount">${{ cartTotal | number: 2 }}</span>
+              <span class="cart-badge" ng-if="cart.length > 0">{{ cart.length }}</span>
             </a>
           </li>
         </ul>
       </div>
+
     </div>
   </nav>
 
   <div class="container">
 
     <!-- SLIDER -->
-    <div id="slider-area">
-      <div id="slider-area" class="mb-40">
-  <div id="mainCarousel" class="carousel slide" data-ride="carousel">
-    
-    <!-- Puntos indicadores -->
-    <ol class="carousel-indicators">
-      <li data-target="#mainCarousel" data-slide-to="0" class="active"></li>
-      <li data-target="#mainCarousel" data-slide-to="1"></li>
-      <li data-target="#mainCarousel" data-slide-to="2"></li>
-    </ol>
+    <div id="slider-area" class="mb-40">
+      <div id="mainCarousel" class="carousel slide" data-ride="carousel">
+        
+        <ol class="carousel-indicators">
+          <li data-target="#mainCarousel" data-slide-to="0" class="active"></li>
+          <li data-target="#mainCarousel" data-slide-to="1"></li>
+          <li data-target="#mainCarousel" data-slide-to="2"></li>
+        </ol>
 
-    <!-- Slides -->
-    <div class="carousel-inner" role="listbox">
-      <div class="item active">
-        <img src="img/slide1.jpg" alt="Ofertas en electrónicos">
-        <div class="carousel-caption">
-          <h3>Ofertas en Electrónicos</h3>
-          <p>Encuentra los mejores gadgets al mejor precio.</p>
+        <div class="carousel-inner" role="listbox">
+          <div class="item active">
+            <img src="img/slide1.jpg" alt="Ofertas en electrónicos">
+            <div class="carousel-caption">
+              <h3>Ofertas en Electrónicos</h3>
+              <p>Encuentra los mejores gadgets al mejor precio.</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <img src="img/slide2.jpg" alt="Moda para todos">
+            <div class="carousel-caption">
+              <h3>Moda para todos</h3>
+              <p>Ropa y accesorios para tu estilo.</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <img src="img/slide3.jpg" alt="Artículos para el hogar">
+            <div class="carousel-caption">
+              <h3>Artículos para el hogar</h3>
+              <p>Decora y renueva tus espacios.</p>
+            </div>
+          </div>
+        </div>
+
+        <a class="left carousel-control" href="#mainCarousel" role="button" data-slide="prev">
+          <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+          <span class="sr-only">Anterior</span>
+        </a>
+        <a class="right carousel-control" href="#mainCarousel" role="button" data-slide="next">
+          <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+          <span class="sr-only">Siguiente</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ENCABEZADO DE PRODUCTOS -->
+    <section class="products-wrapper">
+      <div class="products-header">
+        <div>
+          <h2 class="products-title">Productos</h2>
+          <p class="products-subtitle">
+            Explora los artículos disponibles en <strong>FakeStore</strong>.
+          </p>
+        </div>
+
+        <div class="products-filters">
+          <div class="filter-group">
+            <label>Categoría:</label>
+            <span class="category-pill">{{ selectedCategoryName || 'Todas' }}</span>
+          </div>
+
+          <div class="filter-group">
+            <label>Buscar:</label>
+            <input type="text" class="search-input" placeholder="Buscar por nombre..." ng-model="searchText">
+          </div>
         </div>
       </div>
 
-      <div class="item">
-        <img src="img/slide2.jpg" alt="Moda para todos">
-        <div class="carousel-caption">
-          <h3>Moda para todos</h3>
-          <p>Ropa y accesorios para tu estilo.</p>
+      <!-- LISTA DE PRODUCTOS -->
+      <div class="products-section">
+        <div class="product-card" 
+             ng-repeat="p in displayProducts | filter: searchText">
+          
+          <img class="product-image" ng-src="{{p.image}}" alt="{{p.title}}">
+          <h3 class="product-title">{{p.title}}</h3>
+          <p class="product-price">${{p.price | number: 2}}</p>
+
+          <div class="product-actions">
+            <button class="btn-details" ng-click="openDetails(p)">Detalles</button>
+            <button class="btn-add" ng-click="updateCart(p)">Agregar</button>
+          </div>
         </div>
       </div>
-
-      <div class="item">
-        <img src="img/slide3.jpg" alt="Artículos para el hogar">
-        <div class="carousel-caption">
-          <h3>Artículos para el hogar</h3>
-          <p>Decora y renueva tus espacios.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Controles -->
-    <a class="left carousel-control" href="#mainCarousel" role="button" data-slide="prev">
-      <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-      <span class="sr-only">Anterior</span>
-    </a>
-    <a class="right carousel-control" href="#mainCarousel" role="button" data-slide="next">
-      <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-      <span class="sr-only">Siguiente</span>
-    </a>
-  </div>
-</div>
-
-    </div>
-
-<!-- ENCABEZADO DE PRODUCTOS + FILTROS VISUALES -->
-<section class="products-wrapper">
-  <div class="products-header">
-    <div>
-      <h2 class="products-title">Productos</h2>
-      <p class="products-subtitle">
-        Explora los artículos disponibles en <strong>FakeStore</strong>.
-      </p>
-    </div>
-
-    <div class="products-filters">
-      <!-- Persona 3 conectará esto con la lógica -->
-      <div class="filter-group">
-        <label>Productos de la categoría:</label>
-        <span class="category-pill">{{ selectedCategoryName || 'Todas' }}</span>
-      </div>
-
-      <div class="filter-group">
-        <label>Buscar:</label>
-        <input type="text" class="search-input" placeholder="Buscar por nombre..."
-               ng-model="searchText">
-      </div>
-    </div>
-  </div>
-
-  <!-- LISTA DE PRODUCTOS -->
-  <div class="products-section">
-    <div class="product-card" ng-repeat="p in displayProducts">
-      <img class="product-image" ng-src="{{p.image}}" alt="{{p.title}}">
-      
-      <h3 class="product-title">{{p.title}}</h3>
-      <p class="product-price">${{p.price | number: 2}}</p>
-
-      <div class="product-actions">
-        <button class="btn-details" ng-click="openDetails(p)">Detalles</button>
-        <button class="btn-add" ng-click="updateCart(p)">Agregar</button>
-      </div>
-    </div>
-  </div>
-</section>
-
+    </section>
 
   </div><!-- /.container -->
 
@@ -169,7 +180,7 @@
     </div>
   </div>
 
-    <!-- FOOTER -->
+  <!-- FOOTER -->
   <footer class="main-footer">
     <div class="footer-content">
       <div>
@@ -188,21 +199,15 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2025 FakeStore. Todos los derechos reservados.</span>
+      © 2025 FakeStore
     </div>
   </footer>
 
-
-  <!-- jQuery (necesario para Bootstrap 3) -->
+  <!-- Scripts -->
   <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
-
-  <!-- Bootstrap JS para el carrusel -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
-
-  <!-- AngularJS -->
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
 
-  <!-- Tu app -->
   <script src="js/app.js"></script>
   <script src="js/services/ProductService.js"></script>
   <script src="js/controllers/MainController.js"></script>
