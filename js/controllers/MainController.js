@@ -101,4 +101,71 @@
         $scope.testLocalStorage();
         */
     }
+    var app = angular.module("StoreApp", []);
+
+app.controller("MainController", function($scope, ProductService) {
+
+    // Productos de ejemplo
+    $scope.products = [
+        { id:1, name:"Laptop", price:900, img:"img1.jpg", description:"Laptop potente" },
+        { id:2, name:"Mouse", price:25, img:"img2.jpg", description:"Mouse gamer" }
+    ];
+
+    $scope.cart = ProductService.getCart();
+    $scope.cartTotal = ProductService.getTotal($scope.cart);
+
+    $scope.showDetailsModal = false;
+    $scope.showCartModal = false;
+    $scope.selectedProduct = null;
+
+    // =============================
+    // ABRIR MODAL DE DETALLES
+    // =============================
+    $scope.openDetails = function(product) {
+        $scope.selectedProduct = product;
+        $scope.showDetailsModal = true;
+    };
+
+    // =============================
+    // AGREGAR AL CARRITO
+    // =============================
+    $scope.updateCart = function(product) {
+
+        let item = $scope.cart.find(p => p.id === product.id);
+
+        if(item) {
+            item.quantity++;
+        } else {
+            $scope.cart.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                quantity: 1
+            });
+        }
+
+        ProductService.saveCart($scope.cart);
+
+        $scope.cartTotal = ProductService.getTotal($scope.cart);
+
+        alert("Producto agregado al carrito");
+    };
+
+    // =============================
+    // ABRIR MODAL DEL CARRITO
+    // =============================
+    $scope.openCart = function() {
+        $scope.cartTotal = ProductService.getTotal($scope.cart);
+        $scope.showCartModal = true;
+    };
+
+    // =============================
+    // BOTÓN CANCELAR (CERRAR MODALES)
+    // =============================
+    $scope.closeModals = function() {
+        $scope.showDetailsModal = false;
+        $scope.showCartModal = false;
+    };
+
+});
 })();
