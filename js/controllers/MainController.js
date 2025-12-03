@@ -10,29 +10,43 @@
 
     function MainController($scope, ProductService) {
 
-        // ================================
-        // VARIABLES PRINCIPALES
-        // ================================
-        $scope.allProducts = [];       // Todos los productos desde la API
-        $scope.displayProducts = [];   // Productos filtrados que se muestran
-        $scope.cart = [];              // Carrito
-        $scope.cartTotal = 0;          // Total del carrito
+        // Variables principales
+        $scope.allProducts = [];
+        $scope.displayProducts = [];
+        $scope.cart = [];
+        $scope.cartTotal = 0;
 
-        // Categorías (Persona 3)
+        // Variables para persona 5
+        $scope.subtotal = 0;
+        $scope.impuesto = 0;
+        $scope.productoAgregado = null;
+
+        // Modales
+        $scope.showDetailsModal = false;
+        $scope.showCartModal = false;
+        $scope.selectedProduct = null;
+        
+        $scope.mostrarCarritoFlotante = false;
+
+        // Detectar scroll para mostrar carrito flotante
+        angular.element(window).on('scroll', function() {
+            var scroll = window.pageYOffset || document.documentElement.scrollTop;
+            $scope.$apply(function() {
+                $scope.mostrarCarritoFlotante = scroll > 200;
+            });
+        });
+
+        // Categorías
         $scope.categories = [];
-        $scope.selectedCategory = "";  // valor actual del dropdown
-        $scope.searchText = "";        // texto de búsqueda
+        $scope.selectedCategory = "";
+        $scope.searchText = "";
 
-        // Modales (Persona 4)
+        // Modales
         $scope.showDetailsModal = false;
         $scope.showCartModal = false;
         $scope.selectedProduct = null;
 
-        // ================================
-        // FUNCIONES AUXILIARES
-        // ================================
-
-        // Obtener categorías únicas desde los productos
+        // Obtener categorías únicas
         function getUniqueCategories(products) {
             var set = new Set();
             products.forEach(function(p) {
@@ -43,57 +57,53 @@
             return Array.from(set);
         }
 
-        // Calcular total del carrito (Persona 5)
-        function calculateTotal(cart) {
-            var total = 0;
-            cart.forEach(function(item) {
-                total += item.price * item.quantity;
-            });
-            return total;
+        // Calcular subtotal
+        function calcularSubtotal() {
+            var sub = 0;
+            for(var i = 0; i < $scope.cart.length; i++) {
+                sub += $scope.cart[i].price * $scope.cart[i].quantity;
+            }
+            return sub;
         }
 
-        // ================================
-        // CARGA INICIAL DE DATOS
-        // ================================
+        // Calcular impuesto (13%)
+        function calcularImpuesto(subtotal) {
+            return subtotal * 0.13;
+        }
 
-        // 1. Obtener productos de la API
+        // Actualizar totales
+        function actualizarTotales() {
+            $scope.subtotal = calcularSubtotal();
+            $scope.impuesto = calcularImpuesto($scope.subtotal);
+            $scope.cartTotal = $scope.subtotal + $scope.impuesto;
+        }
+
+        // Cargar productos de la API
         ProductService.getAllProducts().then(function(products) {
             $scope.allProducts = products;
             $scope.displayProducts = products;
-
-            // Extraer categorías (Persona 3)
             $scope.categories = getUniqueCategories(products);
-
-            console.log("Productos cargados:", products.length);
-            console.log("Categorías:", $scope.categories);
         });
 
-        // 2. Cargar carrito desde localStorage
+        // Cargar carrito desde localStorage
         $scope.cart = ProductService.getCart() || [];
-        $scope.cartTotal = calculateTotal($scope.cart);
+        actualizarTotales();
 
-        // ================================
-        // LÓGICA DE FILTROS 
-        // ================================
-
-        // Se llama cuando cambia el dropdown
+        // Filtrar por categoría
         $scope.filterByCategory = function() {
             $scope.applyFilters();
         };
 
-        // Aplica combinación de filtros:
-        // categoría + búsqueda por nombre
+        // Aplicar filtros
         $scope.applyFilters = function() {
             var list = $scope.allProducts;
 
-            // Filtro por categoría
             if ($scope.selectedCategory && $scope.selectedCategory !== "") {
                 list = list.filter(function(p) {
                     return p.category === $scope.selectedCategory;
                 });
             }
 
-            // Filtro por texto (título)
             if ($scope.searchText && $scope.searchText.trim() !== "") {
                 var text = $scope.searchText.toLowerCase();
                 list = list.filter(function(p) {
@@ -104,52 +114,74 @@
             $scope.displayProducts = list;
         };
 
-        // ================================
-        // DETALLES DEL PRODUCTO
-        // ================================
-
+        // Abrir detalles
         $scope.openDetails = function(product) {
             $scope.selectedProduct = product;
             $scope.showDetailsModal = true;
         };
 
-        // ================================
-        // CARRITO (PERSONAS 4 y 5)
-        // ================================
-
-        // Abrir modal del carrito (tu HTML llama a openCartModal)
+        // Abrir modal del carrito
         $scope.openCartModal = function() {
-            $scope.cartTotal = calculateTotal($scope.cart);
+            actualizarTotales();
             $scope.showCartModal = true;
         };
 
-        // Agregar producto al carrito
+        // Agregar al carrito
         $scope.updateCart = function(product) {
+            var existe = false;
+            
+            for(var i = 0; i < $scope.cart.length; i++) {
+                if($scope.cart[i].id === product.id) {
+                    $scope.cart[i].quantity++;
+                    existe = true;
+                    break;
+                }
+            }
 
-            // Buscamos si el producto ya está en el carrito
-            var item = $scope.cart.find(function(p) {
-                return p.id === product.id;
-            });
-
-            if (item) {
-                item.quantity++;
-            } else {
+            if(!existe) {
                 $scope.cart.push({
                     id: product.id,
-                    title: product.title,      // IMPORTANTE: tu HTML muestra item.title
+                    title: product.title,
                     price: product.price,
                     quantity: 1
                 });
             }
 
-            // Guardar en localStorage
             ProductService.saveCart($scope.cart);
-
-            // Recalcular total
-            $scope.cartTotal = calculateTotal($scope.cart);
+            actualizarTotales();
+            
+            // Efecto visual
+            $scope.productoAgregado = product.id;
+            setTimeout(function() {
+                $scope.$apply(function() {
+                    $scope.productoAgregado = null;
+                });
+            }, 500);
         };
 
-        // Cerrar modales (detalles y carrito)
+        // Eliminar producto del carrito
+        $scope.eliminarProducto = function(index) {
+            $scope.cart.splice(index, 1);
+            ProductService.saveCart($scope.cart);
+            actualizarTotales();
+        };
+
+        // Procesar pago
+        $scope.procesarPago = function() {
+            if($scope.cart.length === 0) {
+                alert('El carrito está vacío');
+                return;
+            }
+
+            alert('¡Compra realizada con éxito!\nTotal pagado: $' + $scope.cartTotal.toFixed(2));
+            
+            $scope.cart = [];
+            ProductService.clearCart();
+            actualizarTotales();
+            $scope.showCartModal = false;
+        };
+
+        // Cerrar modales
         $scope.closeModals = function() {
             $scope.showDetailsModal = false;
             $scope.showCartModal = false;
